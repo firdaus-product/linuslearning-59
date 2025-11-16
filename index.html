@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ms-MY">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kemahiran Pemulihan: Operasi Tolak (Pembelajaran)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { box-sizing: border-box; }
+    .activity-card { min-height: 400px; }
+    .number-card { transition: all .3s ease; cursor: pointer; }
+    .number-card:hover { transform: scale(1.05); }
+
+    /* Goyang (Salah) */
+    @keyframes shake {
+      0% { transform: translateX(0); } 25% { transform: translateX(-5px); }
+      50% { transform: translateX(5px); } 75% { transform: translateX(-5px); }
+      100% { transform: translateX(0); }
+    }
+    .shake { animation: shake 0.5s ease; }
+
+    /* ====== PERUBAHAN CSS DI SINI ====== */
+    /* CSS untuk Aktiviti Bentuk Lazim */
+    .btk-lazim {
+      display: grid;
+      grid-template-columns: auto repeat(3, 1fr); /* Tukar: 4 lajur (1 utk Op, 3 utk nombor) */
+      gap: 4px;
+      font-family: monospace;
+      font-size: 2.5em;
+      font-weight: bold;
+      max-width: 250px; /* Tukar: Lebar sikit */
+      margin: auto;
+      text-align: center;
+    }
+    .btk-lazim .header { font-size: 0.5em; text-transform: uppercase; color: #6b7280; }
+    .btk-lazim .header-op { /* Lajur header kosong untuk operator */ }
+    .btk-lazim .num { padding: 4px; }
+    .btk-lazim .op { text-align: right; padding-right: 10px; } /* Tukar: Operator ke kanan */
+    .btk-lazim .line { grid-column: 1 / -1; border-top: 4px solid #374151; }
+    .btk-lazim .ans-input {
+      width: 100%; text-align: center; font-size: 1em; font-weight: bold;
+      border: 2px dashed #9ca3af; border-radius: 8px;
+      padding: 4px; background-color: #f9fafb;
+    }
+    .btk-lazim .ans-input:focus { background-color: white; border-style: solid; border-color: #3b82f6; outline: none; }
+    .btk-lazim .ans-input:disabled { background-color: #e5e7eb; color: #374151; border-style: solid; border-color: #d1d5db; }
+    /* ====== AKHIR PERUBAHAN CSS ====== */
+    
+    /* CSS untuk "Pinjam" (Aktiviti 3 & 4) */
+    .borrow-num {
+      position: relative;
+      display: inline-block;
+      padding: 0 4px;
+      transition: all 0.3s ease;
+    }
+    .borrow-num .original { text-decoration: line-through; color: #ef4444; opacity: 0.7; }
+    .borrow-num .new {
+      position: absolute;
+      top: -0.8em; left: 50%;
+      transform: translateX(-50%);
+      color: #10b981;
+      font-size: 0.8em;
+      font-weight: bold;
+    }
+    
+    /* CSS untuk Aktiviti 5 (Pecah Blok) */
+    .block-container { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px; background: #f3f4f6; border-radius: 8px; min-height: 100px; justify-content: center; align-items: center; }
+    .block { font-weight: bold; border-radius: 4px; padding: 4px 8px; color: white; cursor: pointer; transition: all 0.3s ease; }
+    .block:hover { transform: scale(1.05); }
+    .block-ratus { background-color: #ef4444; width: 100px; height: 100px; display:flex; align-items:center; justify-content:center; }
+    .block-puluh { background-color: #3b82f6; width: 20px; height: 80px; display:flex; align-items:center; justify-content:center; font-size: 0.8em; }
+    .block-sa { background-color: #f97316; width: 20px; height: 20px; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-purple-50 min-h-full">
+
+  <div class="bg-yellow-100 border-b-4 border-yellow-300 p-4 shadow-sm sticky top-0 z-10">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl">📚</span>
+        <span id="info-text" class="text-lg font-semibold text-gray-800">
+          Pilih aktiviti untuk mula belajar operasi tolak!
+        </span>
+      </div>
+      <button id="speak-btn"
+              class="bg-yellow-300 hover:bg-yellow-400 text-yellow-800 font-bold py-2 px-4 rounded-full text-xl transition-colors duration-200"
+              onclick="speakInfo()">
+        🔊
+      </button>
+    </div>
+  </div>
+
+  <div class="max-w-6xl mx-auto p-6">
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-6 activity-card flex items-center justify-center">
+      <div id="activity-content" class="text-center w-full">
+        <div class="py-16">
+          <div class="text-6xl mb-4">🧮</div>
+          <h2 class="text-3xl font-bold text-gray-800 mb-4">
+            Kemahiran Pemulihan: Operasi Tolak
+          </h2>
+          <p class="text-xl text-gray-600 mb-8">
+            Pilih aktiviti di bawah untuk meneroka operasi tolak secara interaktif.
+          </p>
+          <div class="text-4xl">👇</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-lg p-6">
+      <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">Pilih Aktiviti</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+        <button onclick="loadActivity(1)"
+                class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg text-lg transition-colors duration-200">
+          🎯 Tolak Asas
+        </button>
+        <button onclick="loadActivity(2)"
+                class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg text-lg transition-colors duration-200">
+          🧮 Latihan (Tanpa Pinjam)
+        </button>
+        <button onclick="loadActivity(3)"
+                class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-4 rounded-lg text-lg transition-colors duration-200">
+          🤔 Eksplorasi Pinjam
+        </button>
+        <button onclick="loadActivity(4)"
+                class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-lg text-lg transition-colors duration-200">
+          🧮 Latihan (Dengan Pinjam)
+        </button>
+        <button onclick="loadActivity(5)"
+                class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg text-lg transition-colors duration-200">
+          🧱 Pecah Blok
+        </button>
+      </div>
+
+      <div class="flex justify-center gap-4">
+        <button onclick="clearActivity()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg text-lg transition-colors duration-200">
+          🧹 Bersih
+        </button>
+        <button onclick="nextActivity()" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg text-lg transition-colors duration-200">
+          ➡️ Seterusnya
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentActivity = 0;
+    let ttsEnabled = false;
+    let currentInfo = "Pilih aktiviti untuk mula belajar operasi tolak!";
+
+    /* ====== TTS ====== */
+    function speak(text) {
+      if (!ttsEnabled) return;
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      setTimeout(() => {
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'ms-MY';
+        u.rate = 0.9; u.pitch = 1.05;
+        const voices = window.speechSynthesis.getVoices();
+        const ms = voices.find(v => v.lang === 'ms-MY' || v.lang?.startsWith('ms'));
+        if (ms) u.voice = ms;
+        window.speechSynthesis.speak(u);
+      }, 100);
+    }
+    function setInfo(text) { currentInfo = text; document.getElementById('info-text').textContent = text; }
+    function speakInfo() {
+      if (!ttsEnabled) {
+        ttsEnabled = true;
+        const btn = document.getElementById('speak-btn');
+        btn.classList.add('bg-green-300', 'hover:bg-green-400');
+        btn.classList.remove('bg-yellow-300', 'hover:bg-yellow-400');
+      }
+      speak(currentInfo);
+    }
+
+    /* ====== Router ====== */
+    function loadActivity(n) {
+      currentActivity = n;
+      const content = document.getElementById('activity-content');
+      if (n === 1) return loadTolakAsas(content);
+      if (n === 2) return loadSimulasiTanpaPinjam(content);
+      if (n === 3) return loadKonsepPinjam(content);
+      if (n === 4) return loadSimulasiDenganPinjam(content);
+      if (n === 5) return loadPecahBlok(content);
+    }
+
+    /* ====== Aktiviti 1: Tolak Asas ====== */
+    function loadTolakAsas(content) {
+      setInfo("Jom cuba tolak nombor mudah. Klik pada jawapan yang betul.");
+      content.innerHTML = `
+        <h3 class="text-2xl font-bold text-blue-600 mb-6">🎯 Tolak Asas</h3>
+        <div class="text-6xl font-bold text-gray-800 mb-4">
+          8 - 2 = ?
+        </div>
+        <div id="choices" class="flex flex-wrap justify-center gap-4">
+          <button class="number-card bg-blue-100 hover:bg-blue-200 border-2 border-blue-300 rounded-xl p-6 text-4xl font-bold" data-answer="5">5</button>
+          <button class="number-card bg-blue-100 hover:bg-blue-200 border-2 border-blue-300 rounded-xl p-6 text-4xl font-bold" data-answer="6">6</button>
+          <button class="number-card bg-blue-100 hover:bg-blue-200 border-2 border-blue-300 rounded-xl p-6 text-4xl font-bold" data-answer="7">7</button>
+        </div>
+        <div id="result" class="mt-6 text-xl font-semibold h-8"></div>
+      `;
+      content.querySelectorAll('#choices button').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const resultEl = content.querySelector('#result');
+          const answer = e.currentTarget.dataset.answer;
+          if (answer === '6') {
+            resultEl.textContent = "Bagus, 8 tolak 2 ialah 6!";
+            resultEl.className = "mt-6 text-xl font-semibold text-green-600";
+            setInfo("Bagus! 8 tolak 2 ialah 6."); speak("Bagus! 8 tolak 2 ialah 6.");
+          } else {
+            resultEl.textContent = "Bukan. Cuba lagi.";
+            resultEl.className = "mt-6 text-xl font-semibold text-red-600";
+            setInfo("Bukan. Cuba lagi."); speak("Bukan. Cuba lagi.");
+            e.currentTarget.classList.add('shake');
+            setTimeout(() => e.currentTarget.classList.remove('shake'), 500);
+          }
+        });
+      });
+    }
+
+    /* ====== Aktiviti 2: Simulasi (Tanpa Pinjam) - DIBETULKAN ====== */
+    function loadSimulasiTanpaPinjam(content) {
+      setInfo("Jom selesaikan 798 - 302. Mula dari rumah Sa.");
+      content.innerHTML = `
+        <h3 class="text-2xl font-bold text-green-600 mb-6">🧮 Latihan (Tanpa Pinjam)</h3>
+        <div class="btk-lazim" id="sim-1">
+          <div class="header-op"></div><div class="header">Ratus</div> <div class="header">Puluh</div> <div class="header">Sa</div>
+          
+          <div></div><div class="num">7</div> <div class="num">9</div> <div class="num">8</div>
+          
+          <div class="num op">-</div><div class="num">3</div> <div class="num">0</div> <div class="num">2</div>
+          
+          <div class="line"></div>
+          
+          <div></div>
+          <input class="ans-input" id="ans-ra" type="text" maxlength="1" disabled />
+          <input class="ans-input" id="ans-pu" type="text" maxlength="1" disabled />
+          <input class="ans-input" id="ans-sa" type="text" maxlength="1" />
+        </div>
+        <div id="result" class="mt-6 text-xl font-semibold h-8 text-green-700">Mula dengan rumah Sa (8 - 2).</div>
+      `;
+      
+      const sa = content.querySelector('#ans-sa');
+      const pu = content.querySelector('#ans-pu');
+      const ra = content.querySelector('#ans-ra');
+      const result = content.querySelector('#result');
+      
+      sa.addEventListener('input', (e) => {
+        if (e.target.value === '6') {
+          setInfo("Betul! Sekarang rumah Puluh (9 - 0)."); speak("Betul! Sekarang rumah Puluh.");
+          result.textContent = "Sekarang rumah Puluh (9 - 0).";
+          sa.disabled = true; pu.disabled = false; pu.focus();
+        }
+      });
+      pu.addEventListener('input', (e) => {
+        if (e.target.value === '9') {
+          setInfo("Betul! Sekarang rumah Ratus (7 - 3)."); speak("Betul! Sekarang rumah Ratus.");
+          result.textContent = "Sekarang rumah Ratus (7 - 3).";
+          pu.disabled = true; ra.disabled = false; ra.focus();
+        }
+      });
+      ra.addEventListener('input', (e) => {
+        if (e.target.value === '4') {
+          setInfo("Syabas! Jawapan 496."); speak("Syabas! Jawapan 496.");
+          result.textContent = "Syabas! Jawapannya 496.";
+          ra.disabled = true;
+        }
+      });
+    }
+
+    /* ====== Aktiviti 3: Eksplorasi Konsep Pinjam ====== */
+    function loadKonsepPinjam(content) {
+      setInfo("Lihat bagaimana nombor 503 'meminjam' untuk bersedia.");
+      content.innerHTML = `
+        <h3 class="text-2xl font-bold text-purple-600 mb-6">🤔 Eksplorasi Pinjam</h3>
+        <div class="text-center text-6xl font-bold font-mono mb-8" id="borrow-display">
+          <span>5</span> <span>0</span> <span>3</span>
+        </div>
+        <div class="flex justify-center gap-4">
+          <button id="btn-pinjam-1" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-5 rounded-lg">
+            1. Pinjam dari Ratus
+          </button>
+          <button id="btn-pinjam-2" class="bg-gray-400 text-white font-bold py-3 px-5 rounded-lg" disabled>
+            2. Pinjam dari Puluh
+          </button>
+        </div>
+      `;
+
+      const display = content.querySelector('#borrow-display');
+      const btn1 = content.querySelector('#btn-pinjam-1');
+      const btn2 = content.querySelector('#btn-pinjam-2');
+
+      btn1.addEventListener('click', () => {
+        display.innerHTML = `
+          <span class="borrow-num"><span class="new">4</span><span class="original">5</span></span>
+          <span class="borrow-num"><span class="new">10</span><span class="original">0</span></span>
+          <span>3</span>
+        `;
+        setInfo("Bagus. 500 jadi 4 Ratus dan 10 Puluh. Sekarang, pinjam untuk Sa.");
+        speak("Bagus. 500 jadi 4 Ratus dan 10 Puluh. Sekarang, pinjam untuk Sa.");
+        btn1.disabled = true; btn1.classList.remove('bg-purple-500', 'hover:bg-purple-600'); btn1.classList.add('bg-gray-400');
+        btn2.disabled = false; btn2.classList.add('bg-purple-500', 'hover:bg-purple-600'); btn2.classList.remove('bg-gray-400');
+      });
+
+      btn2.addEventListener('click', () => {
+        display.innerHTML = `
+          <span class="borrow-num"><span class="new">4</span><span class="original">5</span></span>
+          <span class="borrow-num"><span class="new">9</span><span class="original">10</span></span>
+          <span class="borrow-num"><span class="new">13</span><span class="original">3</span></span>
+        `;
+        setInfo("Syabas! Nombor 503 kini sedia untuk ditolak.");
+        speak("Syabas! Nombor 503 kini sedia untuk ditolak.");
+        btn2.disabled = true; btn2.classList.remove('bg-purple-500', 'hover:bg-purple-600'); btn2.classList.add('bg-gray-400');
+      });
+    }
+
+    /* ====== Aktiviti 4: Simulasi (Dengan Pinjam) - DIBETULKAN ====== */
+    function loadSimulasiDenganPinjam(content) {
+      setInfo("Jom selesaikan 503 - 394. Rumah Sa tak cukup, klik 'Pinjam'.");
+      content.innerHTML = `
+        <h3 class="text-2xl font-bold text-orange-600 mb-6">🧮 Latihan (Dengan Pinjam)</h3>
+        <div class="btk-lazim" id="sim-2">
+          <div class="header-op"></div><div class="header">Ratus</div> <div class="header">Puluh</div> <div class="header">Sa</div>
+          
+          <div></div><div class="num" id="num-ra">5</div> <div class="num" id="num-pu">0</div> <div class="num" id="num-sa">3</div>
+          
+          <div class="num op">-</div><div class="num">3</div> <div class="num">9</div> <div class="num">4</div>
+          
+          <div class="line"></div>
+          
+          <div></div>
+          <input class="ans-input" id="ans-ra" type="text" maxlength="1" disabled />
+          <input class="ans-input" id="ans-pu" type="text" maxlength="1" disabled />
+          <input class="ans-input" id="ans-sa" type="text" maxlength="1" disabled />
+        </div>
+        <div class="text-center mt-6">
+          <button id="btn-pinjam" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-5 rounded-lg">
+            Klik Sini untuk Pinjam
+          </button>
+        </div>
+        <div id="result" class="mt-6 text-xl font-semibold h-8 text-orange-700 text-center">Rumah Sa (3) tak cukup untuk tolak (4).</div>
+      `;
+
+      let borrowStep = 0;
+      const btn = content.querySelector('#btn-pinjam');
+      const numRa = content.querySelector('#num-ra');
+      const numPu = content.querySelector('#num-pu');
+      const numSa = content.querySelector('#num-sa');
+      const sa = content.querySelector('#ans-sa');
+      const pu = content.querySelector('#ans-pu');
+      const ra = content.querySelector('#ans-ra');
+      const result = content.querySelector('#result');
+
+      btn.addEventListener('click', () => {
+        borrowStep++;
+        if (borrowStep === 1) {
+          numRa.innerHTML = `<span class="borrow-num"><span class="new">4</span><span class="original">5</span></span>`;
+          numPu.innerHTML = `<span class="borrow-num"><span class="new">10</span><span class="original">0</span></span>`;
+          setInfo("Pinjam dari Ratus. Sekarang, pinjam dari Puluh untuk Sa.");
+          speak("Pinjam dari Ratus. Sekarang, pinjam dari Puluh untuk Sa.");
+          result.textContent = "Sekarang, pinjam dari Puluh untuk Sa.";
+        } else if (borrowStep === 2) {
+          numPu.innerHTML = `<span class="borrow-num"><span class="new">9</span><span class="original">10</span></span>`;
+          numSa.innerHTML = `<span class="borrow-num"><span class="new">13</span><span class="original">3</span></span>`;
+          setInfo("Sedia! Selesaikan rumah Sa (13 - 4).");
+          speak("Sedia! Selesaikan rumah Sa (13 - 4).");
+          result.textContent = "Selesaikan rumah Sa (13 - 4).";
+          btn.remove();
+          sa.disabled = false; sa.focus();
+        }
+      });
+      
+      sa.addEventListener('input', (e) => {
+        if (e.target.value === '9') {
+          setInfo("Betul! Sekarang rumah Puluh (9 - 9)."); speak("Betul! Sekarang rumah Puluh.");
+          result.textContent = "Sekarang rumah Puluh (9 - 9).";
+          sa.disabled = true; pu.disabled = false; pu.focus();
+        }
+      });
+      pu.addEventListener('input', (e) => {
+        if (e.target.value === '0') {
+          setInfo("Betul! Sekarang rumah Ratus (4 - 3)."); speak("Betul! Sekarang rumah Ratus.");
+          result.textContent = "Sekarang rumah Ratus (4 - 3).";
+          pu.disabled = true; ra.disabled = false; ra.focus();
+        }
+      });
+      ra.addEventListener('input', (e) => {
+        if (e.target.value === '1') {
+          setInfo("Syabas! Jawapan 109."); speak("Syabas! Jawapan 109.");
+          result.textContent = "Syabas! Jawapannya 109.";
+          ra.disabled = true;
+        }
+      });
+    }
+
+    /* ====== Aktiviti 5: Pecah Blok ====== */
+    function loadPecahBlok(content) {
+      setInfo("Jom teroka bagaimana 1 Ratus boleh dipecahkan.");
+      content.innerHTML = `
+        <h3 class="text-2xl font-bold text-red-600 mb-6">🧱 Pecah Blok</h3>
+        <div class="block-container" id="block-space">
+          <button id="start-block" class="bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-6 rounded-lg">Ambil 1 Blok Ratus</button>
+        </div>
+        <div id="result" class="mt-6 text-xl font-semibold h-8 text-red-700 text-center"></div>
+      `;
+
+      const container = content.querySelector('#block-space');
+      const startBtn = content.querySelector('#start-block');
+      const result = content.querySelector('#result');
+
+      startBtn.addEventListener('click', () => {
+        startBtn.remove();
+        const ratus = document.createElement('div');
+        ratus.className = 'block block-ratus';
+        ratus.textContent = 'RATUS';
+        ratus.onclick = pecahRatus;
+        container.appendChild(ratus);
+        setInfo("Ini 1 Ratus. Klik ia untuk pecahkan.");
+        speak("Ini 1 Ratus. Klik ia untuk pecahkan.");
+        result.textContent = "1 Ratus";
+      });
+
+      function pecahRatus(e) {
+        e.currentTarget.remove();
+        for (let i = 0; i < 10; i++) {
+          const puluh = document.createElement('div');
+          puluh.className = 'block block-puluh';
+          puluh.textContent = 'PU';
+          puluh.onclick = pecahPuluh;
+          container.appendChild(puluh);
+        }
+        setInfo("1 Ratus = 10 Puluh. Klik satu blok Puluh untuk pecahkannya.");
+        speak("1 Ratus sama dengan 10 Puluh. Klik satu blok Puluh untuk pecahkannya.");
+        result.textContent = "10 Puluh";
+      }
+      
+      function pecahPuluh(e) {
+        e.currentTarget.remove();
+        for (let i = 0; i < 10; i++) {
+          const sa = document.createElement('div');
+          sa.className = 'block block-sa';
+          container.appendChild(sa);
+        }
+        // Bersihkan event listener
+        container.querySelectorAll('.block-puluh').forEach(b => b.onclick = null);
+        
+        setInfo("1 Puluh = 10 Sa. Klik 'Bersih' atau 'Seterusnya' untuk teruskan.");
+        speak("1 Puluh sama dengan 10 Sa.");
+        result.textContent = "9 Puluh dan 10 Sa";
+      }
+    }
+
+
+    /* ====== Kawalan Umum ====== */
+    function clearActivity() {
+      currentActivity = 0;
+      document.getElementById('activity-content').innerHTML = `
+        <div class="text-center py-16">
+          <div class="text-6xl mb-4">🧮</div>
+          <h2 class="text-3xl font-bold text-gray-800 mb-4">Kemahiran Pemulihan: Operasi Tolak</h2>
+          <p class="text-xl text-gray-600 mb-8">Pilih aktiviti di bawah untuk meneroka operasi tolak secara interaktif.</p>
+          <div class="text-4xl">👇</div>
+        </div>
+      `;
+      setInfo("Pilih aktiviti untuk mula belajar operasi tolak!");
+    }
+    function nextActivity() {
+      if (currentActivity === 0) return loadActivity(1);
+      if (currentActivity < 5) return loadActivity(currentActivity + 1);
+      return loadActivity(1);
+    }
+
+    // Kekalkan TTS resume pada sesetengah pelayar
+    if ('speechSynthesis' in window) {
+      setInterval(() => { if (window.speechSynthesis.paused) window.speechSynthesis.resume(); }, 1000);
+    }
+  </script>
+</body>
+</html>
